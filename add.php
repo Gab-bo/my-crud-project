@@ -5,23 +5,30 @@ include 'db.php';
 ?>
 
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 include 'db.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if (isset($_POST['submit'])) {
     $name = $_POST['name'];
     $course = $_POST['course'];
     $age = $_POST['age'];
     $gender = $_POST['gender'];
 
-    $sql = "INSERT INTO students (name, course, age, gender) VALUES ('$name', '$course', '$age', '$gender')";
+    $photo = $_FILES['photo']['name'];
+    $target = "uploads/" . basename($photo);
 
-    if ($conn->query($sql) === TRUE) {
-        header("Location: index.php");
-        exit();
+    if (move_uploaded_file($_FILES['photo']['tmp_name'], $target)) {
+        $sql = "INSERT INTO students (name, course, age, gender, photo) 
+                VALUES ('$name', '$course', $age, '$gender', '$target')";
+
+        if ($conn->query($sql) === TRUE) {
+            echo "Student added successfully!";
+            header("Location: index.php"); 
+            exit();
+        } else {
+            echo "Error: " . $conn->error;
+        }
     } else {
-        echo "Error: " . $conn->error;
+        echo "Failed to upload image.";
     }
 }
 ?>
@@ -94,17 +101,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <h2>Add New Student</h2>
-    <form method="POST">
-        Name: <input type="text" name="name" required><br>
-        Course: <input type="text" name="course" required><br>
-        Age: <input type="number" name="age" required><br>
-        Gender:
-        <select name="gender" required>
-            <option value="">Select Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-        </select><br><br>
-        <input type="submit" value="Add Student">
-    </form>
+    <form action="add.php" method="post" enctype="multipart/form-data">
+    <label>Name:</label>
+    <input type="text" name="name"><br>
+
+    <label>Course:</label>
+    <input type="text" name="course"><br>
+
+    <label>Age:</label>
+    <input type="number" name="age"><br>
+
+    <label>Gender:</label>
+    <select name="gender">
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select><br>
+
+    <label>Photo:</label>
+    <input type="file" name="photo"><br>
+
+    <input type="submit" name="submit" value="Add Student">
+</form>
+
 </body>
 </html>
